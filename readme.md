@@ -26,3 +26,32 @@
 }
 ```
 
+我的bencode库解析是把二进制数据转换成go内置的数据结构map,slice,int,string,
+
+有两个用到interface的地方
+* map[string]interface{}
+* []interface{}
+
+直接获取int,string还好办,最怕就是获取[key]slice的了,需要做很多的检查
+
+譬如,获取`path`.用了这个库只需要做如下的检查即可
+```bash
+# 一步检查slice,并保证slice里面每个元素都是map
+if err = CheckMapValue(objInterface, "info.files", reflect.Slice, reflect.Map); err != nil {
+		t.Fatal(err)
+	}
+    
+# 一步解析到slice
+files := objInterface.(map[string]interface{})["info"].(map[string]interface{})["files"].([]interface{})
+
+
+# 再次一步检查slice,并保证slice里面每个元素都是string
+err = CheckMapValue(files[i], "path", reflect.Slice, reflect.String)
+		if err != nil {
+			t.Fatal("err")
+		}
+
+# 一步解析到slice
+paths := files[i].(map[string]interface{})["path"].([]interface{})
+
+```
